@@ -1,7 +1,6 @@
 import fastify from 'fastify';
 
 import { postImage } from './routes/images/postImage';
-import { getImage } from './routes/images/getImage';
 import { projectRoutes } from './routes/project/projectRoutes';
 import { userLogin } from './routes/user/login';
 import { putUser } from './routes/user/users';
@@ -24,7 +23,6 @@ server.get('/', (req, res) => {
 //routes
 projectRoutes(server);
 postImage(server);
-getImage(server);
 
 userLogin(server)
 putUser(server)

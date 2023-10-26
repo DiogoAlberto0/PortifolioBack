@@ -2,6 +2,8 @@ import { FastifyInstance } from "fastify";
 import { db } from "../../config/prisma";
 import { verifyJwt } from "../../verifyjwt";
 
+import { del } from "@vercel/blob";
+
 interface postProjectBody {
     name: string;
     description: string;
@@ -82,11 +84,28 @@ export const projectRoutes = (server: FastifyInstance) => {
     });
 
     server.put('/project/:id', async (req, res) => {
-        await verifyJwt(req.headers.authentication as string)
+        const { auth, decoded, message } = await verifyJwt(req.headers.authentication as string)
+
+        if(!auth) return res.status(401).send(message)
+
+        if(decoded?.admin === false) return res.status(401).send('Você não tem permissão para cadastrar um projeto')
 
         const { id } = req.params as putProjectParams
         
-        const { name, description, imageUrl, githubUrl, projectUrl } = req.body as postProjectBody;
+        const { name, description, imageUrl, githubUrl, projectUrl,  } = req.body as postProjectBody;
+
+        const project = await db.project.findUnique({
+            where: {
+                id: Number(id)
+            },
+            select: {
+                imageUrl: true
+            }
+        })
+
+        console.log(project)
+        
+        del(project?.imageUrl as string).then((resp) => console.log(resp)).catch((err) => console.log(err))
 
         await db.project.update({
             where: {
@@ -102,6 +121,28 @@ export const projectRoutes = (server: FastifyInstance) => {
         })
         .then(() => res.send('Projeto atualizado com sucesso!'))
         .catch(err => res.code(400).send(`Erro: ${err}`))
+    })
+
+    server.delete('/project/:id', async (req, res) => {
+        const { auth, decoded, message } = await verifyJwt(req.headers.authentication as string)
+
+        if(!auth) return res.status(401).send(message)
+
+        if(decoded?.admin === false) return res.status(401).send('Você não tem permissão para cadastrar um projeto')
+
+        const { id } = req.params as putProjectParams
+
+        const project = await db.project.delete({
+            where: {
+                id: Number(id)
+            }
+        })
+
+        console.log(project)
+
+        del(project?.imageUrl as string).then((resp) => console.log(resp)).catch((err) => console.log(err))
+
+
     })
 
 }
