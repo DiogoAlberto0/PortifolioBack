@@ -42,7 +42,7 @@ export const postImage = (server: FastifyInstance) => {
         //salvando a imagem no servidor
 
             // image url
-            const imagePath = `tmp/${name}`
+            const imagePath = `public/${name}`
         await pump(data.file, fs.createWriteStream(imagePath))
         .then(() => res.send({path: imagePath}))
         .catch(( err ) => res.send( err ))
